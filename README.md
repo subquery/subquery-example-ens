@@ -62,6 +62,14 @@ Run this command under the project directory.
 yarn codegen
 ```
 
+#### Generate contract interface
+
+```
+yarn codegen:abi
+```
+And move generated `./types/ethers-contracts` to `/src`.
+
+
 ## Build the project
 
 In order to deploy your SubQuery project to our hosted service, it is mandatory to pack your configuration before upload.

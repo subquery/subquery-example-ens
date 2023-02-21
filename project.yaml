@@ -22,106 +22,237 @@ network:
   endpoint: "wss://eth.api.onfinality.io/ws?apikey="
 
 dataSources:
+  # ENSRegistry
   - kind: ethereum/Runtime
-    startBlock: 12369621
+    startBlock: 9380380
     options:
       # Must be a key of assets
-      abi: Factory
-      address: "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+      abi: EnsRegistry
+      address: "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
     assets:
-      Factory:
-        file: "./abis/Factory.json"
-      ERC20:
-        file: "./abis/ERC20.json"
-      ERC20SymbolBytes:
-        file: "./abis/ERC20SymbolBytes.json"
-      ERC20NameBytes:
-        file: "./abis/ERC20NameBytes.json"
-      Pool:
-        file: "./abis/pool.json"
+      EnsRegistry:
+        file: "./abis/Registry.json"
     mapping:
       file: "./dist/index.js"
       handlers:
-        - handler: handlePoolCreated
-          kind: ethereum/LogHandler
-          filter:
-            topics:
-              - PoolCreated(address indexed token0, address indexed token1, uint24 indexed fee, int24 tickSpacing, address pool)
-    # ethereum/contract
-  - kind: ethereum/Runtime
-    startBlock: 12369651
-    options:
-      abi: NonfungiblePositionManager
-      address: '0xC36442b4a4522E871399CD717aBDD847Ab11FE88'
-    assets:
-      NonfungiblePositionManager:
-        file: ./abis/NonfungiblePositionManager.json
-      Pool:
-        file: ./abis/pool.json
-      Factory:
-        file: ./abis/factory.json
-      ERC20:
-        file: ./abis/ERC20.json
-    mapping:
-      file: "./dist/index.js"
-      handlers:
-        - handler: handleIncreaseLiquidity
-          kind: ethereum/LogHandler
-          filter:
-            topics:
-              - IncreaseLiquidity (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
-        - handler: handleDecreaseLiquidity
-          kind: ethereum/LogHandler
-          filter:
-            topics:
-              -  DecreaseLiquidity (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1)
-        - handler: handleCollect
-          kind: ethereum/LogHandler
-          filter:
-            topics:
-              - Collect (uint256 tokenId, address recipient, uint256 amount0, uint256 amount1)
         - handler: handleTransfer
           kind: ethereum/LogHandler
           filter:
             topics:
-              - Transfer (address from, address to, uint256 tokenId)
-templates:
-  - name: Pool
-    kind: ethereum/Runtime
+              - Transfer(indexed bytes32,address)
+        - handler: handleNewOwner
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NewOwner(indexed bytes32,indexed bytes32,address)
+        - handler: handleNewResolver
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NewResolver(indexed bytes32,address)
+        - handler: handleNewTTL
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NewTTL(indexed bytes32,uint64)
+  # ENSRegistryOld
+  - kind: ethereum/Runtime
+    startBlock: 3327417
     options:
-      abi: Pool
+      # Must be a key of assets
+      abi: EnsRegistry
+      address: "0x314159265dd8dbb310642f98f50c066173c1259b"
     assets:
-      Pool:
-        file: "./abis/pool.json"
-      Factory:
-        file: "./abis/factory.json"
-      ERC20:
-        file: "./abis/ERC20.json"
+      EnsRegistry:
+        file: "./abis/Registry.json"
     mapping:
       file: "./dist/index.js"
       handlers:
-        - handler: handleInitialize
+        - handler: handleTransferOldRegistry
           kind: ethereum/LogHandler
           filter:
             topics:
-              - Initialize (uint160,int24)
-        - handler: handleSwap
+              - Transfer(indexed bytes32,address)
+        - handler: handleNewOwnerOldRegistry
           kind: ethereum/LogHandler
           filter:
             topics:
-              - Swap (address sender, address recipient, int256 amount0, int256 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick)
-        - handler: handleMint
+              - NewOwner(indexed bytes32,indexed bytes32,address)
+        - handler: handleNewResolverOldRegistry
           kind: ethereum/LogHandler
           filter:
             topics:
-              - Mint(address sender, address owner, int24 tickLower, int24 tickUpper, uint128 amount, uint256 amount0, uint256 amount1)
-        - handler: handleBurn
+              - NewResolver(indexed bytes32,address)
+        - handler: handleNewTTLOldRegistry
           kind: ethereum/LogHandler
           filter:
             topics:
-              - Burn(indexed address,indexed int24,indexed int24,uint128,uint256,uint256)
-        - handler: handleFlash
+              - NewTTL(indexed bytes32,uint64)
+  # Resolver
+  - kind: ethereum/Runtime
+    startBlock: 1 #this is not provided, so we start from 1
+    assets:
+      Resolver:
+        file: "./abis/PublicResolver.json"
+    mapping:
+      file: "./dist/index.js"
+      handlers:
+        - handler: handleABIChanged
           kind: ethereum/LogHandler
           filter:
             topics:
-              - Flash(indexed address,indexed address,uint256,uint256,uint256,uint256)
+              - ABIChanged(indexed bytes32,indexed uint256)
+        - handler: handleAddrChanged
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - AddrChanged(indexed bytes32,address)
+        - handler: handleMulticoinAddrChanged
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - AddressChanged(indexed bytes32,uint256,bytes)
+        - handler: handleAuthorisationChanged
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - AuthorisationChanged(indexed bytes32,indexed address,indexed address,bool)
+        - handler: handleContentHashChanged
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - ContenthashChanged(indexed bytes32,bytes)
+        - handler: handleInterfaceChanged
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - InterfaceChanged(indexed bytes32,indexed bytes4,address)
+        - handler: handleNameChanged
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NameChanged(indexed bytes32,string)
+        - handler: handlePubkeyChanged
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - PubkeyChanged(indexed bytes32,bytes32,bytes32)
+        - handler: handleTextChanged
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - TextChanged(indexed bytes32,indexed string,string)
+        - handler: handleTextChangedWithValue
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - TextChanged(indexed bytes32,indexed string,string,string)
+        - handler: handleVersionChanged
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - TextChanged(indexed bytes32,indexed string,string,string)
+  # BaseRegistrar
+  - kind: ethereum/Runtime
+    startBlock: 9380410
+    options:
+      # Must be a key of assets
+      abi: BaseRegistrar
+      address: "0x57f1887a8BF19b14fC0dF6Fd9B2acc9Af147eA85"
+    assets:
+      BaseRegistrar:
+        file: "./abis/BaseRegistrar.json"
+    mapping:
+      file: "./dist/index.js"
+      handlers:
+        - handler: handleNameRegistered
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NameRegistered(indexed uint256,indexed address,uint256)
+        - handler: handleNameRenewed
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NameRenewed(indexed uint256,uint256)
+        - handler: handleNameTransferred
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - Transfer(indexed address,indexed address,indexed uint256)
+  # EthRegistrarControllerOld
+  - kind: ethereum/Runtime
+    startBlock: 9380471
+    options:
+      # Must be a key of assets
+      abi: EthRegistrarControllerOld
+      address: "0x283Af0B28c62C092C9727F1Ee09c02CA627EB7F5"
+    assets:
+      EthRegistrarControllerOld:
+        file: "./abis/EthRegistrarControllerOld.json"
+    mapping:
+      file: "./dist/index.js"
+      handlers:
+        - handler: handleNameRegisteredByControllerOld
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NameRegistered(string,indexed bytes32,indexed address,uint256,uint256)
+        - handler: handleNameRenewedByController
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NameRenewed(string,indexed bytes32,uint256,uint256)
+  # EthRegistrarController
+  - kind: ethereum/Runtime
+    startBlock: 1
+    assets:
+      EthRegistrarController:
+        file: "./abis/EthRegistrarController.json"
+    mapping:
+      file: "./dist/index.js"
+      handlers:
+        - handler: handleNameRegisteredByController
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NameRegistered(string,indexed bytes32,indexed address,uint256,uint256,uint256)
+        - handler: handleNameRenewedByController
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NameRenewed(string,indexed bytes32,uint256,uint256)
+  # NameWrapper
+  - kind: ethereum/Runtime
+    startBlock: 1
+    assets:
+      NameWrapper:
+        file: "./abis/NameWrapper.json"
+    mapping:
+      file: "./dist/index.js"
+      handlers:
+        - handler: handleNameWrapped
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NameWrapped(indexed bytes32,bytes,address,uint32,uint64)
+        - handler: handleNameUnwrapped
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - NameUnwrapped(indexed bytes32,address)
+        - handler: handleFusesSet
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - FusesSet(indexed bytes32,uint32,uint64)
+        - handler: handleTransferSingle
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+        - handler: handleTransferBatch
+          kind: ethereum/LogHandler
+          filter:
+            topics:
+              - TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])

@@ -1,32 +1,49 @@
 {
-  "name": "avalanche-subql-starter",
+  "name": "ens-subquery",
   "version": "0.0.1",
-  "description": "This project can be use as a starting point for developing your new Avalanche SubQuery project",
+  "description": "This project can be use as a starting point for developing your new Ethereum SubQuery project",
   "main": "dist/index.js",
   "scripts": {
     "build": "subql build",
-    "codegen": "subql codegen",
-    "start:docker": "docker-compose pull && docker-compose up --remove-orphans",
-    "dev": "subql codegen && subql build && docker-compose pull && docker-compose up --remove-orphans",
-    "prepack": "rm -rf dist && npm run build",
-    "test": "jest"
+    "prepack": "rm -rf dist && npm build",
+    "test": "jest",
+    "codegen:abi": "npx typechain --target=ethers-v5 './abis/**/*.json' --out-dir src/types/ethers-contracts",
+    "codegen": "./node_modules/.bin/subql codegen && yarn codegen:abi",
+    "start:docker": "docker-compose pull && docker-compose up --remove-orphans"
   },
-  "homepage": "https://github.com/subquery/avalanche-subql-starter",
-  "repository": "github:subquery/avalanche-subql-starter",
+  "homepage": "https://github.com/subquery/ethereum-subql-starter",
+  "repository": "github:subquery/ethereum-subql-starter",
   "files": [
     "dist",
     "schema.graphql",
     "project.yaml"
   ],
+  "lint-staged": {
+    "*.ts": "eslint --cache --fix",
+    "*.{ts,css,md}": "prettier --write"
+  },
   "author": "SubQuery Team",
   "license": "MIT",
   "dependencies": {
-    "@pangolindex/exchange-contracts": "^1.0.2",
-    "assert": "^2.0.0"
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/providers": "^5.7.2",
+    "@subql/common": "latest",
+    "@subql/types-ethereum": "latest",
+    "@subql/validator": "latest",
+    "assert": "^2.0.0",
+    "ethers": "^5.7.2"
   },
   "devDependencies": {
     "@subql/cli": "latest",
-    "@subql/types-avalanche": "latest",
+    "@subql/types": "latest",
+    "@typechain/ethers-v5": "^10.2.0",
+    "@typescript-eslint/eslint-plugin": "4",
+    "@typescript-eslint/parser": "4",
+    "eslint": "7",
+    "eslint-config-prettier": "^8.4.0",
+    "eslint-plugin-header": "^3.1.1",
+    "eslint-plugin-import": "^2.25.4",
+    "typechain": "^8.1.1",
     "typescript": "4.5.5"
   }
 }
