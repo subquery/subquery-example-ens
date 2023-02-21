@@ -50,7 +50,7 @@ type NewResolver @entity {
   resolver: Resolver!
 }
 
-type NewTTL implements @entity {
+type NewTTL @entity {
   id: ID!
   domain: Domain!
   blockNumber: Int!
@@ -105,6 +105,13 @@ type Registration @entity {
   events: [RegistrationEvent] @derivedFrom(field: "registration")
 }
 
+type RegistrationEvent @entity{
+  id: ID!
+  registration: Registration!
+  blockNumber: Int!
+  transactionID: Bytes!
+}
+
 
 type NameRegistered @entity {
   id: ID!
@@ -156,6 +163,13 @@ type Resolver @entity {
   texts: [String]          # Set of observed text record keys
   coinTypes: [BigInt]      # Set of observed SLIP-44 coin types
   events: [ResolverEvent] @derivedFrom(field: "resolver")
+}
+
+type ResolverEvent @entity{
+  id: ID!                   # Concatenation of block number and log ID
+  resolver: Resolver!       # Used to derive relationships to Resolvers
+  blockNumber: Int!
+  transactionID: Bytes!
 }
 
 type AddrChanged @entity {
