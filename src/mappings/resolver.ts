@@ -12,8 +12,6 @@ import {
   TextChanged_bytes32_string_string_Event as TextChangedEvent, TextChanged_bytes32_string_string_string_Event as TextChangedWithValueEvent
 } from "../types/ethers-contracts/PublicResolver";
 
-import { } from "../types/ethers-contracts/PublicResolver";
-
 import {
   AbiChanged,
   Account,
@@ -29,206 +27,205 @@ import {
   TextChanged,
   VersionChanged,
 } from "../types/models";
+import {EthereumLog} from "@subql/types-ethereum";
 
-export function handleAddrChanged(event: AddrChangedEvent): void {
+export async function handleAddrChanged(event: EthereumLog<AddrChangedEvent["args"]>): Promise<void> {
   let account = new Account(event.args.a)
   await account.save()
 
   let resolver = new Resolver(createResolverID(event.args.node, event.address))
-  resolver.domain = event.args.node
+  resolver.domainId = event.args.node
   resolver.address = event.address
-  resolver.addr = event.args.a
-  resolver.save()
+  resolver.addrId = event.args.a
+  await resolver.save()
 
-  let domain = Domain.load(event.args.node.toHexString())
-  if(domain && domain.resolver == resolver.id) {
-    domain.resolvedAddress = event.args.a.toHexString()
-    domain.save()
+  let domain = await Domain.get(event.args.node)
+  if (domain && domain.resolverId == resolver.id) {
+    domain.resolvedAddressId = event.args.a
+    await domain.save()
   }
 
   let resolverEvent = new AddrChanged(createEventID(event))
-  resolverEvent.resolver = resolver.id
-  resolverEvent.blockNumber = event.block.number.toI32()
-  resolverEvent.transactionID = event.transaction.hash
-  resolverEvent.addr = event.args.a.toHexString()
-  resolverEvent.save()
+  resolverEvent.resolverId = resolver.id
+  resolverEvent.blockNumber = event.block.number
+  resolverEvent.transactionID = event.transactionHash
+  resolverEvent.addrId = event.args.a
+  await resolverEvent.save()
 }
 
-export function handleMulticoinAddrChanged(event: AddressChangedEvent): void {
-  let resolver = getOrCreateResolver(event.args.node, event.address)
-
+export async function handleMulticoinAddrChanged(event: EthereumLog<AddressChangedEvent["args"]>): Promise<void> {
+  let resolver = await getOrCreateResolver(event.args.node, event.address)
   let coinType = event.args.coinType
-  if(resolver.coinTypes == null) {
-    resolver.coinTypes = [coinType];
-    resolver.save();
+  if (resolver.coinTypes == null) {
+    resolver.coinTypes = [coinType.toBigInt()];
+    await resolver.save();
   } else {
     let coinTypes = resolver.coinTypes!
-    if(!coinTypes.includes(coinType)){
-      coinTypes.push(coinType)
+    if (!coinTypes.includes(coinType.toBigInt())) {
+      coinTypes.push(coinType.toBigInt())
       resolver.coinTypes = coinTypes
-      resolver.save()
+      await resolver.save()
     }
   }
 
   let resolverEvent = new MulticoinAddrChanged(createEventID(event))
-  resolverEvent.resolver = resolver.id
-  resolverEvent.blockNumber = event.block.number.toI32()
-  resolverEvent.transactionID = event.transaction.hash
-  resolverEvent.coinType = coinType
+  resolverEvent.resolverId = resolver.id
+  resolverEvent.blockNumber = event.block.number
+  resolverEvent.transactionID = event.transactionHash
+  resolverEvent.coinType = coinType.toBigInt()
   resolverEvent.addr = event.args.newAddress
-  resolverEvent.save()
+  await resolverEvent.save()
 }
 
-export function handleNameChanged(event: NameChangedEvent): void {
-  if(event.args.name.indexOf("\u0000") != -1) return;
+export async function handleNameChanged(event: EthereumLog<NameChangedEvent["args"]>): Promise<void> {
+  if (event.args.name.indexOf("\u0000") != -1) return;
 
   let resolverEvent = new NameChanged(createEventID(event))
   resolverEvent.resolverId = createResolverID(event.args.node, event.address)
-  resolverEvent.blockNumber = event.block.number.toI32()
-  resolverEvent.transactionID = event.transaction.hash
+  resolverEvent.blockNumber = event.block.number
+  resolverEvent.transactionID = event.transactionHash
   resolverEvent.name = event.args.name
-  resolverEvent.save()
+  await resolverEvent.save()
 }
 
-export function handleABIChanged(event: ABIChangedEvent): void {
+export async function handleABIChanged(event: EthereumLog<ABIChangedEvent["args"]>): Promise<void> {
   let resolverEvent = new AbiChanged(createEventID(event))
   resolverEvent.resolverId = createResolverID(event.args.node, event.address)
-  resolverEvent.blockNumber = event.block.number.toI32()
-  resolverEvent.transactionID = event.transaction.hash
-  resolverEvent.contentType = event.args.contentType
-  resolverEvent.save()
+  resolverEvent.blockNumber = event.block.number
+  resolverEvent.transactionID = event.transactionHash
+  resolverEvent.contentType = event.args.contentType.toBigInt()
+  await resolverEvent.save()
 }
 
-export function handlePubkeyChanged(event: PubkeyChangedEvent): void {
+export async function handlePubkeyChanged(event: EthereumLog<PubkeyChangedEvent["args"]>): Promise<void> {
   let resolverEvent = new PubkeyChanged(createEventID(event))
   resolverEvent.resolverId = createResolverID(event.args.node, event.address)
-  resolverEvent.blockNumber = event.block.number.toI32()
-  resolverEvent.transactionID = event.transaction.hash
+  resolverEvent.blockNumber = event.block.number
+  resolverEvent.transactionID = event.transactionHash
   resolverEvent.x = event.args.x
   resolverEvent.y = event.args.y
-  resolverEvent.save()
+  await resolverEvent.save()
 }
 
-export function handleTextChanged(event: TextChangedEvent): void {
-  let resolver = getOrCreateResolver(event.args.node, event.address)
+export async function handleTextChanged(event: EthereumLog<TextChangedEvent["args"]>): Promise<void> {
+  let resolver = await getOrCreateResolver(event.args.node, event.address)
 
   let key = event.args.key;
   if(resolver.texts == null) {
     resolver.texts = [key];
-    resolver.save();
+    await resolver.save();
   } else {
     let texts = resolver.texts!
     if(!texts.includes(key)){
       texts.push(key)
       resolver.texts = texts
-      resolver.save()
+      await resolver.save()
     }
   }
 
   let resolverEvent = new TextChanged(createEventID(event))
-  resolverEvent.resolver = createResolverID(event.args.node, event.address)
-  resolverEvent.blockNumber = event.block.number.toI32()
-  resolverEvent.transactionID = event.transaction.hash
+  resolverEvent.resolverId = createResolverID(event.args.node, event.address)
+  resolverEvent.blockNumber = event.block.number
+  resolverEvent.transactionID = event.transactionHash
   resolverEvent.key = event.args.key
-  resolverEvent.save()
+  await resolverEvent.save()
 }
 
-export function handleTextChangedWithValue(event: TextChangedWithValueEvent): void {
-  let resolver = getOrCreateResolver(event.args.node, event.address)
-
+export async function handleTextChangedWithValue(event: EthereumLog<TextChangedWithValueEvent["args"]>):  Promise<void> {
+  let resolver = await getOrCreateResolver(event.args.node, event.address)
   let key = event.args.key;
-  if(resolver.texts == null) {
+  if (resolver.texts == null) {
     resolver.texts = [key];
-    resolver.save();
+    await resolver.save();
   } else {
     let texts = resolver.texts!
-    if(!texts.includes(key)){
+    if (!texts.includes(key)) {
       texts.push(key)
       resolver.texts = texts
-      resolver.save()
+      await resolver.save()
     }
   }
 
   let resolverEvent = new TextChanged(createEventID(event))
-  resolverEvent.resolver = createResolverID(event.args.node, event.address)
-  resolverEvent.blockNumber = event.block.number.toI32()
-  resolverEvent.transactionID = event.transaction.hash
+  resolverEvent.resolverId = createResolverID(event.args.node, event.address)
+  resolverEvent.blockNumber = event.block.number
+  resolverEvent.transactionID = event.transactionHash
   resolverEvent.key = event.args.key
   resolverEvent.value = event.args.value
-  resolverEvent.save()
+  await resolverEvent.save()
 }
 
-export function handleContentHashChanged(event: ContenthashChangedEvent): void {
-  let resolver = getOrCreateResolver(event.args.node, event.address)
+export async function handleContentHashChanged(event: EthereumLog<ContenthashChangedEvent["args"]>): Promise<void> {
+  let resolver = await getOrCreateResolver(event.args.node, event.address)
   resolver.contentHash = event.args.hash
-  resolver.save()
+  await resolver.save()
 
   let resolverEvent = new ContenthashChanged(createEventID(event))
-  resolverEvent.resolver = createResolverID(event.args.node, event.address)
-  resolverEvent.blockNumber = event.block.number.toI32()
-  resolverEvent.transactionID = event.transaction.hash
+  resolverEvent.resolverId = createResolverID(event.args.node, event.address)
+  resolverEvent.blockNumber = event.block.number
+  resolverEvent.transactionID = event.transactionHash
   resolverEvent.hash = event.args.hash
-  resolverEvent.save()
+  await resolverEvent.save()
 }
 
-export function handleInterfaceChanged(event: InterfaceChangedEvent): void {
+export function handleInterfaceChanged(event: EthereumLog<InterfaceChangedEvent["args"]>): void {
   let resolverEvent = new InterfaceChanged(createEventID(event))
-  resolverEvent.resolver = createResolverID(event.args.node, event.address)
-  resolverEvent.blockNumber = event.block.number.toI32()
-  resolverEvent.transactionID = event.transaction.hash
+  resolverEvent.resolverId = createResolverID(event.args.node, event.address)
+  resolverEvent.blockNumber = event.block.number
+  resolverEvent.transactionID = event.transactionHash
   resolverEvent.interfaceID = event.args.interfaceID
   resolverEvent.implementer = event.args.implementer
   resolverEvent.save()
 }
 
-export function handleAuthorisationChanged(event: AuthorisationChangedEvent): void {
+export async function handleAuthorisationChanged(event: EthereumLog<AuthorisationChangedEvent["args"]>): Promise<void> {
   let resolverEvent = new AuthorisationChanged(createEventID(event))
-  resolverEvent.blockNumber = event.block.number.toI32()
-  resolverEvent.transactionID = event.transaction.hash
-  resolverEvent.resolver = createResolverID(event.args.node, event.address)
+  resolverEvent.blockNumber = event.block.number
+  resolverEvent.transactionID = event.transactionHash
+  resolverEvent.resolverId = createResolverID(event.args.node, event.address)
   resolverEvent.owner = event.args.owner
   resolverEvent.target = event.args.target
   resolverEvent.isAuthorized = event.args.isAuthorised
-  resolverEvent.save()
+  await resolverEvent.save()
 }
 
-export function handleVersionChanged(event: VersionChangedEvent): void {
+export async function handleVersionChanged(event: EthereumLog<VersionChangedEvent["args"]>): Promise<void> {
   let resolverEvent = new VersionChanged(createEventID(event))
-  resolverEvent.blockNumber = event.block.number.toI32()
-  resolverEvent.transactionID = event.transaction.hash
-  resolverEvent.resolver = createResolverID(event.args.node, event.address)
-  resolverEvent.version = event.args.newVersion
-  resolverEvent.save()
+  resolverEvent.blockNumber = event.block.number
+  resolverEvent.transactionID = event.transactionHash
+  resolverEvent.resolverId = createResolverID(event.args.node, event.address)
+  resolverEvent.version = event.args.newVersion.toBigInt()
+  await resolverEvent.save()
 
-  let domain = Domain.load(event.args.node.toHexString())
-  if(domain && domain.resolver === resolverEvent.resolver) {
-    domain.resolvedAddress = null
-    domain.save()
+  let domain = await Domain.get(event.args.node)
+  if (domain && domain.resolverId === resolverEvent.resolverId) {
+    domain.resolvedAddressId = null
+    await domain.save()
   }
 
-  let resolver = getOrCreateResolver(event.args.node, event.address)
-  resolver.addr = null
+  let resolver = await getOrCreateResolver(event.args.node, event.address)
+  resolver.addrId = null
   resolver.contentHash = null
   resolver.texts = null
   resolver.coinTypes = null
-  resolver.save()
+  await resolver.save()
 }
 
-function getOrCreateResolver(node: Bytes, address: Address): Resolver {
+async function getOrCreateResolver(node: string, address: string): Promise<Resolver> {
   let id = createResolverID(node, address)
-  let resolver = Resolver.load(id)
-  if(resolver === null) {
+  let resolver = await Resolver.get(id)
+  if (resolver === null || resolver === undefined) {
     resolver = new Resolver(id)
-    resolver.domain = node.toHexString()
+    resolver.domainId = node
     resolver.address = address
   }
   return resolver as Resolver
 }
 
-function createEventID(event: ethereum.Event): string {
+function createEventID(event: EthereumLog): string {
   return event.block.number.toString().concat('-').concat(event.logIndex.toString())
 }
 
-function createResolverID(node: Bytes, resolver: Address): string {
-  return resolver.toHexString().concat('-').concat(node.toHexString())
+function createResolverID(node: string, resolver: string): string {
+  return resolver.concat('-').concat(node)
 }

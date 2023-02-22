@@ -72,7 +72,7 @@ type NameWrapped @entity {
   blockNumber: Int!
   transactionID: Bytes!
   name: String!
-  fuses: BigInt!
+  fuses: Int!
   owner: Account!
   expiry: BigInt!
 }
@@ -90,7 +90,7 @@ type FusesSet @entity {
   domain: Domain!
   blockNumber: Int!
   transactionID: Bytes!
-  fuses: BigInt!
+  fuses: Int!
   expiry: BigInt!
 }
 
@@ -142,7 +142,7 @@ type WrappedDomain @entity {
   id: ID!
   domain: Domain!
   expiryDate: BigInt!
-  fuses: BigInt!
+  fuses: Int!
   owner: Account!
   labelName: String
 }
