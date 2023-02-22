@@ -1,30 +1,28 @@
-// Import types and APIs from graph-ts
-import {
-  Bytes, store, BigInt, ByteArray
-} from '@graphprotocol/graph-ts'
+
 // Import event types from the registry contract ABI
 import {
-  FusesSet as FusesSetEvent, NameUnwrapped as NameUnwrappedEvent, NameWrapped as NameWrappedEvent, TransferBatch as TransferBatchEvent, TransferSingle as TransferSingleEvent
-} from './types/NameWrapper/NameWrapper'
+  FusesSetEvent, NameUnwrappedEvent, NameWrappedEvent, TransferBatchEvent, TransferSingleEvent
+} from '../types/ethers-contracts/NameWrapper'
 // Import entity types generated from the GraphQL schema
-import { Domain, FusesSet, NameUnwrapped, NameWrapped, WrappedDomain, WrappedTransfer } from './types/schema'
+import { Domain, FusesSet, NameUnwrapped, NameWrapped, WrappedDomain, WrappedTransfer } from '../types/models'
 import { concat, createEventID, createOrLoadAccount, createOrLoadDomain } from './utils'
+import {EthereumLog} from "@subql/types-ethereum";
 
-function decodeName (buf:Bytes):Array<string> {
+function decodeName (buf:Buffer):Array<string> {
   let offset = 0
-  let list = new ByteArray(0);
-  let dot = Bytes.fromHexString('2e')
+  let list = new Buffer(0);
+  let dot = Buffer.from('2e')
   let len = buf[offset++]
-  let hex = buf.toHexString()
+  let hex = '0x' +buf.toString()
   let firstLabel = ''
   if (len === 0) {
     return [firstLabel, '.']
   }
-  
+
   while (len) {
     let label = hex.slice((offset +1 ) * 2, (offset + 1 + len ) * 2)
     let labelBytes = Bytes.fromHexString(label)
-  
+
     if(offset > 1){
       list = concat(list, dot)
     }else{
@@ -39,18 +37,19 @@ function decodeName (buf:Bytes):Array<string> {
 
 
 
-export function handleNameWrapped(event: NameWrappedEvent): void {
-  let decoded = decodeName(event.params.name)
+export async function handleNameWrapped(event: EthereumLog<NameWrappedEvent["args"]>): void {
+  logger
+  let decoded = decodeName(event.args.name)
   let label = decoded[0]
   let name = decoded[1]
-  let node = event.params.node
-  let fuses = event.params.fuses
-  let blockNumber = event.block.number.toI32()
-  let transactionID = event.transaction.hash
-  let owner = createOrLoadAccount(event.params.owner.toHex())
-  let domain = createOrLoadDomain(node.toHex())
+  let node = event.args.node
+  let fuses = event.args.fuses
+  let blockNumber = event.block.number
+  let transactionID = event.transactionHash
+  let owner = createOrLoadAccount(event.args.owner.toHex())
+  let domain = await createOrLoadDomain(node)
 
-  if(!domain.labelName){
+  if (!domain.labelName) {
     domain.labelName = label
     domain.name = name
   }
@@ -58,13 +57,13 @@ export function handleNameWrapped(event: NameWrappedEvent): void {
 
   let wrappedDomain = new WrappedDomain(node.toHex())
   wrappedDomain.domain = domain.id
-  wrappedDomain.expiryDate = event.params.expiry
+  wrappedDomain.expiryDate = event.args.expiry
   wrappedDomain.fuses = fuses
   wrappedDomain.owner = owner.id
   wrappedDomain.labelName = name
   wrappedDomain.save()
 
-  let nameWrappedEvent = new NameWrapped(createEventID(event))  
+  let nameWrappedEvent = new NameWrapped(createEventID(event))
   nameWrappedEvent.domain = domain.id
   nameWrappedEvent.name = name
   nameWrappedEvent.fuses = fuses
@@ -75,12 +74,12 @@ export function handleNameWrapped(event: NameWrappedEvent): void {
 }
 
 export function handleNameUnwrapped(event: NameUnwrappedEvent): void {
-  let node = event.params.node
+  let node = event.args.node
   let blockNumber = event.block.number.toI32()
   let transactionID = event.transaction.hash
-  let owner = createOrLoadAccount(event.params.owner.toHex())
+  let owner = createOrLoadAccount(event.args.owner.toHex())
 
-  let nameUnwrappedEvent = new NameUnwrapped(createEventID(event))  
+  let nameUnwrappedEvent = new NameUnwrapped(createEventID(event))
   nameUnwrappedEvent.domain = node.toHex()
   nameUnwrappedEvent.owner = owner.id
   nameUnwrappedEvent.blockNumber = blockNumber
@@ -91,16 +90,16 @@ export function handleNameUnwrapped(event: NameUnwrappedEvent): void {
 }
 
 export function handleFusesSet(event: FusesSetEvent): void {
-  let node = event.params.node
-  let fuses = event.params.fuses
-  let expiry = event.params.expiry
+  let node = event.args.node
+  let fuses = event.args.fuses
+  let expiry = event.args.expiry
   let blockNumber = event.block.number.toI32()
   let transactionID = event.transaction.hash
   let wrappedDomain = WrappedDomain.load(node.toHex())!
   wrappedDomain.fuses = fuses
   wrappedDomain.expiryDate = expiry
   wrappedDomain.save()
-  let fusesBurnedEvent = new FusesSet(createEventID(event))  
+  let fusesBurnedEvent = new FusesSet(createEventID(event))
   fusesBurnedEvent.domain = node.toHex()
   fusesBurnedEvent.fuses = fuses
   fusesBurnedEvent.blockNumber = blockNumber
@@ -129,14 +128,14 @@ function makeWrappedTransfer(blockNumber: i32, transactionID: Bytes, eventID: st
 }
 
 export function handleTransferSingle(event: TransferSingleEvent): void {
-  makeWrappedTransfer(event.block.number.toI32(), event.transaction.hash, createEventID(event).concat('-0'), event.params.id, event.params.to.toHex())
+  makeWrappedTransfer(event.block.number.toI32(), event.transaction.hash, createEventID(event).concat('-0'), event.args.id, event.args.to.toHex())
 }
 
 export function handleTransferBatch(event: TransferBatchEvent): void {
   let blockNumber = event.block.number.toI32()
   let transactionID = event.transaction.hash
-  let ids = event.params.ids
-  let to = event.params.to
+  let ids = event.args.ids
+  let to = event.args.to
   for (let i = 0; i < ids.length; i++) {
     makeWrappedTransfer(blockNumber, transactionID, createEventID(event).concat('-').concat(i.toString()), ids[i], to.toHex())
   }

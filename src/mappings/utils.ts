@@ -6,6 +6,8 @@ export function createEventID(event: EthereumLog): string {
   return event.block.number.toString().concat('-').concat(event.logIndex.toString())
 }
 
+declare type u32 = number;
+
 export const ROOT_NODE = '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const EMPTY_ADDRESS = '0x0000000000000000000000000000000000000000'
 

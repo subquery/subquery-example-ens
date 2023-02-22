@@ -125,7 +125,7 @@ async function _handleNewOwner(event: EthereumLog<NewOwnerEvent["args"]>, isMigr
 }
 
 // Handler for Transfer events
-export async function handleTransfer(event: TransferEvent): Promise<void> {
+export async function handleTransfer(event: EthereumLog<TransferEvent["args"]>): Promise<void> {
   let node = event.args.node
 
   let account = new Account(event.args.owner)
@@ -218,7 +218,7 @@ export async function handleNewTTLOldRegistry(event: EthereumLog<NewTTLEvent["ar
   }
 }
 
-export async function handleTransferOldRegistry(event: TransferEvent): Promise<void> {
+export async function handleTransferOldRegistry(event: EthereumLog<TransferEvent["args"]>): Promise<void> {
   let domain = await getDomain(event.args.node)
   if (domain.isMigrated == false) {
     await handleTransfer(event)
