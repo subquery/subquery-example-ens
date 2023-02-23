@@ -56,7 +56,7 @@ export async function handleAddrChanged(event: EthereumLog<AddrChangedEvent["arg
 export async function handleMulticoinAddrChanged(event: EthereumLog<AddressChangedEvent["args"]>): Promise<void> {
   let resolver = await getOrCreateResolver(event.args.node, event.address)
   let coinType = event.args.coinType
-  if (resolver.coinTypes == null) {
+  if (resolver.coinTypes == null ||resolver.coinTypes == undefined ) {
     resolver.coinTypes = [coinType.toBigInt()];
     await resolver.save();
   } else {
@@ -111,7 +111,7 @@ export async function handleTextChanged(event: EthereumLog<TextChangedEvent["arg
   let resolver = await getOrCreateResolver(event.args.node, event.address)
 
   let key = event.args.key;
-  if(resolver.texts == null) {
+  if(resolver.texts == null || resolver.texts == undefined) {
     resolver.texts = [key];
     await resolver.save();
   } else {
@@ -134,7 +134,7 @@ export async function handleTextChanged(event: EthereumLog<TextChangedEvent["arg
 export async function handleTextChangedWithValue(event: EthereumLog<TextChangedWithValueEvent["args"]>):  Promise<void> {
   let resolver = await getOrCreateResolver(event.args.node, event.address)
   let key = event.args.key;
-  if (resolver.texts == null) {
+  if (resolver.texts == null || resolver.texts == undefined) {
     resolver.texts = [key];
     await resolver.save();
   } else {

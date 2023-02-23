@@ -50,7 +50,7 @@ async function recurseDomainDelete(domain: Domain): Promise<string | null> {
       domain.subdomainCount == 0
   ) {
     const parentDomain = await Domain.get(domain.parentId!)
-    if (parentDomain != null) {
+    if (parentDomain != null && parentDomain != undefined) {
       parentDomain.subdomainCount = parentDomain.subdomainCount - 1
       await parentDomain.save()
       return recurseDomainDelete(parentDomain)
@@ -91,7 +91,7 @@ async function _handleNewOwner(event: EthereumLog<NewOwnerEvent["args"]>, isMigr
     // Get label and node names
     // let label = ens.nameByHash(event.params.label.toHexString())
     let label = event.args.label
-    if (label != null) {
+    if (label != null && label != undefined) {
       domain.labelName = label
     }
 

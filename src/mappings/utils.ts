@@ -43,7 +43,7 @@ export function uint256ToByteArray(i: string): Uint8Array {
 
 export async function createOrLoadAccount(address: string): Promise<Account> {
   let account = await Account.get(address)
-  if (account == null) {
+  if (account == null || account == undefined) {
     account = new Account(address)
     await account.save()
   }

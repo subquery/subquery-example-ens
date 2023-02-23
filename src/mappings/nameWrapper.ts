@@ -113,7 +113,7 @@ async function makeWrappedTransfer(blockNumber: number, transactionID: string, e
   let wrappedDomain = await WrappedDomain.get(namehash)
   // new registrations emit the Transfer` event before the NameWrapped event
   // so we need to create the WrappedDomain entity here
-  if (wrappedDomain == null) {
+  if (wrappedDomain == null || wrappedDomain == undefined) {
     wrappedDomain = new WrappedDomain(namehash)
   }
   wrappedDomain.ownerId = _to.id

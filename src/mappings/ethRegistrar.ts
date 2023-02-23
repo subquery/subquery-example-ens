@@ -38,7 +38,7 @@ export async function handleNameRegistered(event: EthereumLog<NameRegisteredEven
 
   //  let labelName = ens.nameByHash(label.toHexString())
   let labelName = label.toString()
-  if (labelName != null) {
+  if (labelName != null && labelName != undefined) {
     domain.labelName = labelName
     domain.name = labelName + '.eth'
     registration.labelName = labelName
@@ -95,7 +95,7 @@ async function setNamePreimage(name: string, label: string, cost: bigint): Promi
   }
 
   let registration = await Registration.get(label);
-  if (registration == null) return
+  if (registration == null || registration == undefined) return
   registration.labelName = name
   registration.cost = cost
   await registration.save()
