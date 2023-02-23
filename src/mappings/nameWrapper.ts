@@ -14,7 +14,7 @@ function decodeName (buf:Buffer):Array<string> {
   let list = new Buffer(0);
   let dot = Buffer.from('2e')
   let len = buf[offset++]
-  let hex = '0x' +buf.toString()
+  let hex = '0x' + buf.toString()
   let firstLabel = ''
   if (len === 0) {
     return [firstLabel, '.']
@@ -25,11 +25,11 @@ function decodeName (buf:Buffer):Array<string> {
     let labelBytes = Buffer.from(label)
 
     if(offset > 1){
-      list = concat(list, dot)
+      list = Buffer.concat([list, dot])
     }else{
       firstLabel = labelBytes.toString()
     }
-    list = concat(list, labelBytes)
+    list = Buffer.concat([list, labelBytes])
     offset += len
     len = buf[offset++]
   }
@@ -38,8 +38,8 @@ function decodeName (buf:Buffer):Array<string> {
 
 
 
-export async function handleNameWrapped(event: EthereumLog<NameWrappedEvent["args"]>): void {
-  let decoded = decodeName(event.args.name)
+export async function handleNameWrapped(event: EthereumLog<NameWrappedEvent["args"]>): Promise<void> {
+  let decoded = decodeName(Buffer.from(event.args.name))
   let label = decoded[0]
   let name = decoded[1]
   let node = event.args.node
@@ -126,8 +126,8 @@ async function makeWrappedTransfer(blockNumber: number, transactionID: string, e
   await wrappedTransfer.save()
 }
 
-export function handleTransferSingle(event: EthereumLog<TransferSingleEvent["args"]>): void {
-  makeWrappedTransfer(event.block.number, event.transactionHash, createEventID(event).concat('-0'), event.args.id, event.args.to)
+export async function handleTransferSingle(event: EthereumLog<TransferSingleEvent["args"]>): Promise<void> {
+  await makeWrappedTransfer(event.block.number, event.transactionHash, createEventID(event).concat('-0'), event.args.id, event.args.to)
 }
 
 export async function handleTransferBatch(event: EthereumLog<TransferBatchEvent["args"]>): Promise<void> {

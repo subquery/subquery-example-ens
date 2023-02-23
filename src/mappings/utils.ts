@@ -11,22 +11,18 @@ declare type u32 = number;
 export const ROOT_NODE = '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const EMPTY_ADDRESS = '0x0000000000000000000000000000000000000000'
 
-// Helper for concatenating two byte arrays
+// Helper for concatenating two string to byteArray
 export function concat(_a: string, _b: string): Uint8Array {
-
-  const a = Buffer.from(_a);
-  const b = Buffer.from(_b);
-
-  let out = new Uint8Array(a.length + b.length)
-  for (let i = 0; i < a.length; i++) {
-    out[i] = a[i]
-  }
-  for (let j = 0; j < b.length; j++) {
-    out[a.length + j] = b[j]
-  }
-  // return out as ByteArray
-  return out
+  return Buffer.from(_a+_b)
 }
+
+export function concatBuffer(_a: string, _b: string): Uint8Array {
+
+
+
+  return Buffer.from(_a+_b)
+}
+
 
 export function byteArrayFromHex(s: string): Uint8Array {
   if(s.length % 2 !== 0) {
