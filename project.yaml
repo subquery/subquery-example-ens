@@ -39,22 +39,22 @@ dataSources:
           kind: ethereum/LogHandler
           filter:
             topics:
-              - Transfer(indexed bytes32,address)
+              - Transfer(bytes32,address)
         - handler: handleNewOwner
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NewOwner(indexed bytes32,indexed bytes32,address)
+              - NewOwner(bytes32,bytes32,address)
         - handler: handleNewResolver
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NewResolver(indexed bytes32,address)
+              - NewResolver(bytes32,address)
         - handler: handleNewTTL
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NewTTL(indexed bytes32,uint64)
+              - NewTTL(bytes32,uint64)
   # ENSRegistryOld
   - kind: ethereum/Runtime
     startBlock: 3327417
@@ -72,22 +72,22 @@ dataSources:
           kind: ethereum/LogHandler
           filter:
             topics:
-              - Transfer(indexed bytes32,address)
+              - Transfer(bytes32,address)
         - handler: handleNewOwnerOldRegistry
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NewOwner(indexed bytes32,indexed bytes32,address)
+              - NewOwner(bytes32,bytes32,address)
         - handler: handleNewResolverOldRegistry
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NewResolver(indexed bytes32,address)
+              - NewResolver(bytes32,address)
         - handler: handleNewTTLOldRegistry
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NewTTL(indexed bytes32,uint64)
+              - NewTTL(bytes32,uint64)
   # Resolver
   - kind: ethereum/Runtime
     startBlock: 3327417 #seems no transaction before this
@@ -101,57 +101,57 @@ dataSources:
           kind: ethereum/LogHandler
           filter:
             topics:
-              - ABIChanged(indexed bytes32,indexed uint256)
+              - ABIChanged(bytes32,uint256)
         - handler: handleAddrChanged
           kind: ethereum/LogHandler
           filter:
             topics:
-              - AddrChanged(indexed bytes32,address)
+              - AddrChanged(bytes32,address)
         - handler: handleMulticoinAddrChanged
           kind: ethereum/LogHandler
           filter:
             topics:
-              - AddressChanged(indexed bytes32,uint256,bytes)
+              - AddressChanged(bytes32,uint256,bytes)
         - handler: handleAuthorisationChanged
           kind: ethereum/LogHandler
           filter:
             topics:
-              - AuthorisationChanged(indexed bytes32,indexed address,indexed address,bool)
+              - AuthorisationChanged(bytes32,address,address,bool)
         - handler: handleContentHashChanged
           kind: ethereum/LogHandler
           filter:
             topics:
-              - ContenthashChanged(indexed bytes32,bytes)
+              - ContenthashChanged(bytes32,bytes)
         - handler: handleInterfaceChanged
           kind: ethereum/LogHandler
           filter:
             topics:
-              - InterfaceChanged(indexed bytes32,indexed bytes4,address)
+              - InterfaceChanged(bytes32,bytes4,address)
         - handler: handleNameChanged
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NameChanged(indexed bytes32,string)
+              - NameChanged(bytes32,string)
         - handler: handlePubkeyChanged
           kind: ethereum/LogHandler
           filter:
             topics:
-              - PubkeyChanged(indexed bytes32,bytes32,bytes32)
+              - PubkeyChanged(bytes32,bytes32,bytes32)
         - handler: handleTextChanged
           kind: ethereum/LogHandler
           filter:
             topics:
-              - TextChanged(indexed bytes32,indexed string,string)
+              - TextChanged( bytes32, string,string)
         - handler: handleTextChangedWithValue
           kind: ethereum/LogHandler
           filter:
             topics:
-              - TextChanged(indexed bytes32,indexed string,string,string)
+              - TextChanged( bytes32, string,string,string)
         - handler: handleVersionChanged
           kind: ethereum/LogHandler
           filter:
             topics:
-              - TextChanged(indexed bytes32,indexed string,string,string)
+              - TextChanged( bytes32, string,string,string)
   # BaseRegistrar
   - kind: ethereum/Runtime
     startBlock: 9380410
@@ -169,17 +169,17 @@ dataSources:
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NameRegistered(indexed uint256,indexed address,uint256)
+              - NameRegistered( uint256, address,uint256)
         - handler: handleNameRenewed
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NameRenewed(indexed uint256,uint256)
+              - NameRenewed( uint256,uint256)
         - handler: handleNameTransferred
           kind: ethereum/LogHandler
           filter:
             topics:
-              - Transfer(indexed address,indexed address,indexed uint256)
+              - Transfer( address, address, uint256)
   # EthRegistrarControllerOld
   - kind: ethereum/Runtime
     startBlock: 9380471
@@ -197,12 +197,12 @@ dataSources:
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NameRegistered(string,indexed bytes32,indexed address,uint256,uint256)
+              - NameRegistered(string, bytes32, address,uint256,uint256)
         - handler: handleNameRenewedByController
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NameRenewed(string,indexed bytes32,uint256,uint256)
+              - NameRenewed(string,bytes32,uint256,uint256)
   # EthRegistrarController
   - kind: ethereum/Runtime
     startBlock: 3327417
@@ -216,12 +216,12 @@ dataSources:
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NameRegistered(string,indexed bytes32,indexed address,uint256,uint256,uint256)
+              - NameRegistered(string, bytes32, address,uint256,uint256,uint256)
         - handler: handleNameRenewedByController
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NameRenewed(string,indexed bytes32,uint256,uint256)
+              - NameRenewed(string, bytes32,uint256,uint256)
   # NameWrapper
   - kind: ethereum/Runtime
     startBlock: 3327417
@@ -235,24 +235,24 @@ dataSources:
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NameWrapped(indexed bytes32,bytes,address,uint32,uint64)
+              - NameWrapped( bytes32,bytes,address,uint32,uint64)
         - handler: handleNameUnwrapped
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NameUnwrapped(indexed bytes32,address)
+              - NameUnwrapped( bytes32,address)
         - handler: handleFusesSet
           kind: ethereum/LogHandler
           filter:
             topics:
-              - FusesSet(indexed bytes32,uint32,uint64)
+              - FusesSet( bytes32,uint32,uint64)
         - handler: handleTransferSingle
           kind: ethereum/LogHandler
           filter:
             topics:
-              - TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+              - TransferSingle( address, address, address,uint256,uint256)
         - handler: handleTransferBatch
           kind: ethereum/LogHandler
           filter:
             topics:
-              - TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
+              - TransferBatch( address, address, address,uint256[],uint256[])
