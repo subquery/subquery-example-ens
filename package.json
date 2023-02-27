@@ -25,6 +25,7 @@
   "author": "SubQuery Team",
   "license": "MIT",
   "dependencies": {
+    "abab": "2.0.6",
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
     "@subql/common": "latest",
