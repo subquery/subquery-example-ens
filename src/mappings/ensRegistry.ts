@@ -19,7 +19,7 @@ const BIG_INT_ZERO = BigNumber.from(0).toBigInt()
 
 function createDomain(node: string, timestamp: bigint): Domain {
   let domain = new Domain(node)
-  if(node == ROOT_NODE) {
+  if (node == ROOT_NODE) {
     domain = new Domain(node)
     domain.ownerId = EMPTY_ADDRESS
     domain.isMigrated = true
@@ -31,7 +31,12 @@ function createDomain(node: string, timestamp: bigint): Domain {
 
 async function getDomain(node: string, timestamp: bigint = BIG_INT_ZERO): Promise<Domain | undefined> {
   let domain = await Domain.get(node)
-  if (domain === null && node == ROOT_NODE || domain === undefined && node == ROOT_NODE) {
+  const emptyAddressAccount = await Account.get(EMPTY_ADDRESS)
+  if (emptyAddressAccount === undefined) {
+    const account =  new Account(EMPTY_ADDRESS)
+    await account.save()
+  }
+  if (domain == undefined && node == ROOT_NODE) {
     return createDomain(node, timestamp)
   } else {
     return domain
@@ -71,27 +76,23 @@ async function saveDomain(domain: Domain): Promise<void> {
 async function _handleNewOwner(event: EthereumLog<NewOwnerEvent["args"]>, isMigrated: boolean): Promise<void> {
   let account = new Account(event.args.owner)
   await account.save()
-
   let subnode = makeSubnode(event)
   let domain = await getDomain(subnode, event.block.timestamp);
   let parent = await getDomain(event.args.node)
-
-  if (domain === null || domain === undefined) {
+  if (domain === undefined) {
     domain = new Domain(subnode)
     domain.createdAt = event.block.timestamp
     domain.subdomainCount = 0
   }
-
-  if (domain.parentId === null && parent !== null || domain.parentId === undefined && parent !== undefined) {
+  if (domain.parentId === null && parent !== undefined || domain.parentId === undefined && parent !== undefined) {
     parent.subdomainCount = parent.subdomainCount + 1
     await parent.save()
   }
-
   if (domain.name == null || domain.name == undefined) {
     // Get label and node names
     // let label = ens.nameByHash(event.params.label.toHexString())
     let label = event.args.label
-    if (label != null && label != undefined) {
+    if (label !== null && label !== undefined) {
       domain.labelName = label
     }
 
@@ -102,13 +103,14 @@ async function _handleNewOwner(event: EthereumLog<NewOwnerEvent["args"]>, isMigr
       domain.name = label
     } else {
       parent = parent!
-      let name = parent.name
+      let name = parent?.name
       if (label && name) {
         domain.name = label + '.' + name
       }
     }
   }
-
+  logger.info(`event ${event.transactionHash} - ${event.transactionIndex}`)
+  logger.info(`parentId ${event.args.node}`)
   domain.ownerId = event.args.owner
   domain.parentId = event.args.node
   domain.labelhash = event.args.label
@@ -150,13 +152,13 @@ export async function handleNewResolver(event:EthereumLog<NewResolverEvent["args
   let id = event.args.resolver.concat('-').concat(event.args.node)
 
   let node = event.args.node
-  let domain = (await getDomain(node))!
+  let domain = await getDomain(node)
   domain.resolverId = id
 
   let resolver = await Resolver.get(id)
   if (resolver == null || resolver == undefined) {
     resolver = new Resolver(id)
-    resolver.domainId = event.args.node
+    resolver.domainId = node
     resolver.address = event.args.resolver
     await resolver.save()
   } else {
@@ -199,7 +201,7 @@ export async function handleNewOwnerOldRegistry(event: EthereumLog<NewOwnerEvent
   let subnode = makeSubnode(event)
   let domain = await getDomain(subnode)
 
-  if (domain == null || domain == undefined || domain.isMigrated == false) {
+  if (domain == undefined || domain.isMigrated == false) {
     await _handleNewOwner(event, false)
   }
 }
@@ -207,7 +209,7 @@ export async function handleNewOwnerOldRegistry(event: EthereumLog<NewOwnerEvent
 export async function handleNewResolverOldRegistry(event: EthereumLog<NewResolverEvent["args"]>): Promise<void> {
   let node = event.args.node
   let domain = await getDomain(node, event.block.timestamp)
-  if (node == ROOT_NODE || !domain.isMigrated) {
+  if (node == ROOT_NODE || (domain!==undefined && !domain.isMigrated)) {
     await handleNewResolver(event)
   }
 }
@@ -220,7 +222,7 @@ export async function handleNewTTLOldRegistry(event: EthereumLog<NewTTLEvent["ar
 
 export async function handleTransferOldRegistry(event: EthereumLog<TransferEvent["args"]>): Promise<void> {
   let domain = await getDomain(event.args.node)
-  if (domain.isMigrated == false) {
+  if (domain?.isMigrated == false) {
     await handleTransfer(event)
   }
 }

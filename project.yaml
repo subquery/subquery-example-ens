@@ -91,6 +91,8 @@ dataSources:
   # Resolver
   - kind: ethereum/Runtime
     startBlock: 3327417 #seems no transaction before this
+    options:
+      abi: Resolver
     assets:
       Resolver:
         file: "./abis/PublicResolver.json"
@@ -206,6 +208,8 @@ dataSources:
   # EthRegistrarController
   - kind: ethereum/Runtime
     startBlock: 3327417
+    options:
+      abi: EthRegistrarController
     assets:
       EthRegistrarController:
         file: "./abis/EthRegistrarController.json"
@@ -225,6 +229,8 @@ dataSources:
   # NameWrapper
   - kind: ethereum/Runtime
     startBlock: 3327417
+    options:
+      abi: NameWrapper
     assets:
       NameWrapper:
         file: "./abis/NameWrapper.json"
