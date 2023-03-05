@@ -143,12 +143,12 @@ dataSources:
           kind: ethereum/LogHandler
           filter:
             topics:
-              - TextChanged( bytes32, string,string)
+              - TextChanged(bytes32,string,string)
         - handler: handleTextChangedWithValue
           kind: ethereum/LogHandler
           filter:
             topics:
-              - TextChanged( bytes32, string,string,string)
+              - TextChanged(bytes32,string,string,string)
         - handler: handleVersionChanged
           kind: ethereum/LogHandler
           filter:
@@ -171,7 +171,7 @@ dataSources:
           kind: ethereum/LogHandler
           filter:
             topics:
-              - NameRegistered( uint256, address,uint256)
+              - NameRegistered(uint256,address,uint256)
         - handler: handleNameRenewed
           kind: ethereum/LogHandler
           filter:
@@ -181,7 +181,7 @@ dataSources:
           kind: ethereum/LogHandler
           filter:
             topics:
-              - Transfer( address, address, uint256)
+              - Transfer(address,address,uint256)
   # EthRegistrarControllerOld
   - kind: ethereum/Runtime
     startBlock: 9380471

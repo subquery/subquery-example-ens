@@ -9,7 +9,8 @@ import {
   NameChangedEvent,
   PubkeyChangedEvent,
   VersionChangedEvent,
-  TextChanged_bytes32_string_string_Event as TextChangedEvent, TextChanged_bytes32_string_string_string_Event as TextChangedWithValueEvent
+  TextChanged_bytes32_string_string_Event as TextChangedEvent,
+  TextChanged_bytes32_string_string_string_Event as TextChangedWithValueEvent,
 } from "../types/ethers-contracts/PublicResolver";
 
 import {
@@ -28,6 +29,14 @@ import {
   VersionChanged,
 } from "../types/models";
 import {EthereumLog} from "@subql/types-ethereum";
+
+
+
+type TextChangedEventArgs = [string, {_isIndexed:boolean;hash:string}, string] & {
+  node: string;
+  indexedKey: {_isIndexed:boolean;hash:string};
+  key: string;
+};
 
 export async function handleAddrChanged(event: EthereumLog<AddrChangedEvent["args"]>): Promise<void> {
   let account = new Account(event.args.a)
@@ -107,10 +116,12 @@ export async function handlePubkeyChanged(event: EthereumLog<PubkeyChangedEvent[
   await resolverEvent.save()
 }
 
-export async function handleTextChanged(event: EthereumLog<TextChangedEvent["args"]>): Promise<void> {
-  let resolver = await getOrCreateResolver(event.args.node, event.address)
 
-  let key = event.args.key;
+export async function handleTextChanged(event: EthereumLog<TextChangedEventArgs>): Promise<void> {
+  let resolver = await getOrCreateResolver(event.args.node, event.address)
+  const key = event.args[2];
+
+
   if(resolver.texts == null || resolver.texts == undefined) {
     resolver.texts = [key];
     await resolver.save();
@@ -127,7 +138,7 @@ export async function handleTextChanged(event: EthereumLog<TextChangedEvent["arg
   resolverEvent.resolverId = createResolverID(event.args.node, event.address)
   resolverEvent.blockNumber = event.block.number
   resolverEvent.transactionID = event.transactionHash
-  resolverEvent.key = event.args.key
+  resolverEvent.key = key
   await resolverEvent.save()
 }
 
