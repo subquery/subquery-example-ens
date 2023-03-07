@@ -73,10 +73,12 @@ async function saveDomain(domain: Domain): Promise<void> {
 }
 
 // Handler for NewOwner events
-async function _handleNewOwner(event: EthereumLog<NewOwnerEvent["args"]>, isMigrated: boolean): Promise<void> {
+async function _handleNewOwner(event: EthereumLog<NewOwnerEvent["args"]>, isMigrated: boolean, subnode?: string): Promise<void> {
   let account = new Account(event.args.owner)
   // await account.save()
-  let subnode = makeSubnode(event)
+  if (!subnode) {
+    subnode = makeSubnode(event);
+  }
   // let domain = await getDomain(subnode, event.block.timestamp)
   // let parent = await getDomain(event.args.node)
   const start2 = Date.now()
@@ -229,7 +231,7 @@ export async function handleNewOwnerOldRegistry(event: EthereumLog<NewOwnerEvent
 
   if (domain == undefined || domain.isMigrated == false) {
 
-    await _handleNewOwner(event, false)
+    await _handleNewOwner(event, false, subnode)
 
   }
 }

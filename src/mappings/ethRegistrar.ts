@@ -43,8 +43,11 @@ export async function handleNameRegistered(event: EthereumLog<NameRegisteredEven
     domain.name = labelName + '.eth'
     registration.labelName = labelName
   }
-  await domain.save()
-  await registration.save()
+
+  await Promise.all([
+    domain.save(),
+    registration.save()
+  ]);
 
   let registrationEvent = new NameRegistered(createEventID(event))
   registrationEvent.registrationId = registration.id
