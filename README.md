@@ -67,8 +67,8 @@ yarn codegen
 ```
 yarn codegen:abi
 ```
-And move generated `./types/ethers-contracts` to `/src`.
 
+And move generated `./types/ethers-contracts` to `/src`.
 
 ## Build the project
 
