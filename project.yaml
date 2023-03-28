@@ -18,7 +18,7 @@ schema:
 network:
   #  endpoint: "fill it in"
   chainId: "1"
-  dictionary: "https://eth-dict.api.onfinality.io/"
+  dictionary: "https://gx.api.subquery.network/sq/subquery/eth-dictionary"
   endpoint: "wss://eth.api.onfinality.io/ws?apikey="
 
 dataSources:
