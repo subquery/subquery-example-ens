@@ -10,14 +10,14 @@ import {
   NameRegisteredEvent,
   NameRenewedEvent,
   TransferEvent,
-} from "../types/ethers-contracts/BaseRegistrar";
+} from "../types/contracts/BaseRegistrar";
 
-import { NameRegisteredEvent as ControllerNameRegisteredEventOld } from "../types/ethers-contracts/EthRegistrarControllerOld";
+import { NameRegisteredEvent as ControllerNameRegisteredEventOld } from "../types/contracts/EthRegistrarControllerOld";
 
 import {
   NameRegisteredEvent as ControllerNameRegisteredEvent,
   NameRenewedEvent as ControllerNameRenewedEvent,
-} from "../types/ethers-contracts/EthRegistrarController";
+} from "../types/contracts/EthRegistrarController";
 
 // Import entity types generated from the GraphQL schema
 import {

@@ -1,8 +1,6 @@
 # SubQuery - Starter Package
 
-The Starter Package is an example that you can use as a starting point for developing your SubQuery project.
-
-A SubQuery package defines which data The SubQuery will index from the Substrate blockchain, and how it will store it.
+This project can be use as a starting point for developing your new Ethereum SubQuery project, it indexes all ENS Records in the ENS registry
 
 ## Preparation
 

@@ -5,7 +5,7 @@ import {
   NameWrappedEvent,
   TransferBatchEvent,
   TransferSingleEvent,
-} from "../types/ethers-contracts/NameWrapper";
+} from "../types/contracts/NameWrapper";
 // Import entity types generated from the GraphQL schema
 import {
   Domain,

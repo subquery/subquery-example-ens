@@ -1,8 +1,5 @@
-// Copyright 2020-2022 SubQuery Pte Ltd authors & contributors
-// SPDX-License-Identifier: Apache-2.0
-
 import { createEventID, concat, ROOT_NODE, EMPTY_ADDRESS } from "./utils";
-
+import { EthereumLog } from "@subql/types-ethereum";
 import { keccak256 } from "@ethersproject/keccak256";
 
 // Import event types from the registry contract ABI
@@ -11,7 +8,7 @@ import {
   TransferEvent,
   NewResolverEvent,
   NewTTLEvent,
-} from "../types/ethers-contracts/Registry";
+} from "../types/contracts/Registry";
 
 // Import entity types generated from the GraphQL schema
 import {
@@ -24,7 +21,6 @@ import {
   NewTTL,
 } from "../types";
 import { BigNumber } from "ethers";
-import { EthereumLog } from "@subql/types-ethereum";
 
 const BIG_INT_ZERO = BigNumber.from(0).toBigInt();
 

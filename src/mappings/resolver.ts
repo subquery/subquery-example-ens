@@ -10,7 +10,7 @@ import {
   VersionChangedEvent,
   TextChanged_bytes32_string_string_Event as TextChangedEvent,
   TextChanged_bytes32_string_string_string_Event as TextChangedWithValueEvent,
-} from "../types/ethers-contracts/PublicResolver";
+} from "../types/contracts/PublicResolver";
 
 import {
   AbiChanged,

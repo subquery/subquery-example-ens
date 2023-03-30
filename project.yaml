@@ -1,6 +1,6 @@
 specVersion: "1.0.0"
 
-name: "ens-subquery"
+name: "subquery-example-ens"
 version: "0.0.1"
 runner:
   node:
@@ -9,17 +9,24 @@ runner:
   query:
     name: "@subql/query"
     version: "*"
-description: "This project can be use as a starting point for developing your new Ethereum SubQuery project"
+description: "This project can be use as a starting point for developing your new Ethereum SubQuery project, it indexes all ENS Records in the ENS registry"
 repository: "https://github.com/subquery/ethereum-subql-starter"
 
 schema:
   file: "./schema.graphql"
 
 network:
-  #  endpoint: "fill it in"
+  # chainId is the EVM Chain ID, for Ethereum this is 1
+  # https://chainlist.org/chain/1
   chainId: "1"
-  dictionary: "https://gx.api.subquery.network/sq/subquery/eth-dictionary"
-  endpoint: "wss://eth.api.onfinality.io/ws?apikey="
+  # This endpoint must be a public non-pruned archive node
+  # Public nodes may be rate limited, which can affect indexing speed
+  # When developing your project we suggest getting a private API key
+  # You can get them from OnFinality for free https://app.onfinality.io
+  # https://documentation.onfinality.io/support/the-enhanced-api-service
+  endpoint: "https://eth.api.onfinality.io/public"
+  # Optionally provide the HTTP endpoint of a full chain dictionary to speed up processing
+  dictionary: "https://eth-dict.api.onfinality.io/"
 
 dataSources:
   # ENSRegistry
@@ -55,6 +62,7 @@ dataSources:
           filter:
             topics:
               - NewTTL(bytes32,uint64)
+
   # ENSRegistryOld
   - kind: ethereum/Runtime
     startBlock: 3327417
@@ -154,6 +162,7 @@ dataSources:
           filter:
             topics:
               - TextChanged( bytes32, string,string,string)
+
   # BaseRegistrar
   - kind: ethereum/Runtime
     startBlock: 9380410
@@ -182,6 +191,7 @@ dataSources:
           filter:
             topics:
               - Transfer(address,address,uint256)
+
   # EthRegistrarControllerOld
   - kind: ethereum/Runtime
     startBlock: 9380471
@@ -205,6 +215,7 @@ dataSources:
           filter:
             topics:
               - NameRenewed(string,bytes32,uint256,uint256)
+
   # EthRegistrarController
   - kind: ethereum/Runtime
     startBlock: 3327417
@@ -226,6 +237,7 @@ dataSources:
           filter:
             topics:
               - NameRenewed(string, bytes32,uint256,uint256)
+
   # NameWrapper
   - kind: ethereum/Runtime
     startBlock: 3327417
