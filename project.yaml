@@ -25,8 +25,8 @@ network:
   # You can get them from OnFinality for free https://app.onfinality.io
   # https://documentation.onfinality.io/support/the-enhanced-api-service
   endpoint: "https://eth.api.onfinality.io/public"
-  # Optionally provide the HTTP endpoint of a full chain dictionary to speed up processing
-  dictionary: "https://eth-dict.api.onfinality.io/"
+  # Recommended to provide the HTTP endpoint of a full chain dictionary to speed up processing
+  dictionary: "https://gx.api.subquery.network/sq/subquery/eth-dictionary"
 
 dataSources:
   # ENSRegistry
@@ -96,6 +96,7 @@ dataSources:
           filter:
             topics:
               - NewTTL(bytes32,uint64)
+
   # Resolver
   - kind: ethereum/Runtime
     startBlock: 3327417 #seems no transaction before this

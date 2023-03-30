@@ -95,17 +95,21 @@ Finally, you should see a GraphQL playground is showing in the explorer and the 
 
 For the `subql-starter` project, you can try to query with the following code to get a taste of how it works.
 
-**Note that by default this project does not index `AvalancheBlockEntity`, `AvalancheBlockEntities`, `AvalancheReceiptEntity`, or `AvalancheReceiptEntities`**
-
 ```graphql
 query {
-  avalancheLogEntities(first: 5) {
+  domains(first: 5, orderBy: SUBDOMAIN_COUNT_DESC) {
     nodes {
       id
-      blockId
-      address
-      topics
-      transactionHash
+      name
+      labelName
+      subdomains(first: 5) {
+        totalCount
+        nodes {
+          id
+          name
+          labelName
+        }
+      }
     }
   }
 }
