@@ -30,6 +30,7 @@ import {
 } from "../types/models";
 import { EthereumLog } from "@subql/types-ethereum";
 import { keccak256 } from "@ethersproject/keccak256";
+import assert from "assert";
 
 var rootNode = byteArrayFromHex(
   "93cdeb708b7545dc668eb9280176169d1c33cfd8ed6f04690a0bcc88a93fc4ae"
@@ -38,19 +39,24 @@ var rootNode = byteArrayFromHex(
 export async function handleNameRegistered(
   event: EthereumLog<NameRegisteredEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'event.args missing')
   let account = new Account(event.args.owner);
   await account.save();
 
   let label = uint256ToByteArray(event.args.id.toHexString());
-  let registration = new Registration(label.toString());
+  
   let domain = await Domain.get(
     keccak256(concat(rootNode.toString(), label.toString()))
   );
+  assert(domain, 'domain missing')
+  let registration =  Registration.create({
+    id: label.toString(),
+    domainId : domain.id,
+    registrationDate : event.block.timestamp,
+    expiryDate : event.args.expires.toBigInt(),
+    registrantId : account.id,
+  });
 
-  registration.domainId = domain.id;
-  registration.registrationDate = event.block.timestamp;
-  registration.expiryDate = event.args.expires.toBigInt();
-  registration.registrantId = account.id;
 
   //  let labelName = ens.nameByHash(label.toHexString())
   let labelName = label.toString();
@@ -62,12 +68,15 @@ export async function handleNameRegistered(
 
   await Promise.all([domain.save(), registration.save()]);
 
-  let registrationEvent = new NameRegistered(createEventID(event));
-  registrationEvent.registrationId = registration.id;
-  registrationEvent.blockNumber = event.block.number;
-  registrationEvent.transactionID = event.transactionHash;
-  registrationEvent.registrantId = account.id;
-  registrationEvent.expiryDate = event.args.expires.toBigInt();
+  let registrationEvent =  NameRegistered.create({
+    id: createEventID(event),
+    registrationId : registration.id,
+    blockNumber : event.block.number,
+    transactionID : event.transactionHash,
+    registrantId : account.id,
+    expiryDate : event.args.expires.toBigInt(), 
+  });
+
   await registrationEvent.save();
 }
 
@@ -94,6 +103,8 @@ export async function handleNameRegisteredByController(
 export async function handleNameRenewedByController(
   event: EthereumLog<ControllerNameRenewedEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'event.args missing')
+
   await setNamePreimage(
     event.args.name,
     event.args.label,
@@ -129,6 +140,8 @@ async function setNamePreimage(
   }
 
   let domain = await Domain.get(keccak256(concat(rootNode.toString(), label)));
+  assert(domain, 'domain missing')
+
   if (domain.labelName !== name) {
     domain.labelName = name;
     domain.name = name + ".eth";
@@ -145,23 +158,32 @@ async function setNamePreimage(
 export async function handleNameRenewed(
   event: EthereumLog<NameRenewedEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'event.args missing')
   let label = uint256ToByteArray(event.args.id.toHexString());
   // let label = event.args.id.toHexString()
   let registration = await Registration.get(label.toString());
+
+
+  assert(registration, 'missing registration')
   registration.expiryDate = event.args.expires.toBigInt();
   await registration.save();
 
-  let registrationEvent = new NameRenewed(createEventID(event));
-  registrationEvent.registrationId = registration.id;
-  registrationEvent.blockNumber = event.block.number;
-  registrationEvent.transactionID = event.transactionHash;
-  registrationEvent.expiryDate = event.args.expires.toBigInt();
+
+  let registrationEvent =  NameRenewed.create({
+    id: createEventID(event),
+    registrationId : registration.id,
+    blockNumber : event.block.number,
+    transactionID : event.transactionHash,
+    expiryDate : event.args.expires.toBigInt(), 
+  });
+
   await registrationEvent.save();
 }
 
 export async function handleNameTransferred(
   event: EthereumLog<TransferEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'event.args missing')
   let account = new Account(event.args.to);
   await account.save();
 
@@ -172,10 +194,13 @@ export async function handleNameTransferred(
   registration.registrantId = account.id;
   await registration.save();
 
-  let transferEvent = new NameTransferred(createEventID(event));
-  transferEvent.registrationId = label.toString();
-  transferEvent.blockNumber = event.block.number;
-  transferEvent.transactionID = event.transactionHash;
-  transferEvent.newOwnerId = account.id;
+  let transferEvent =  NameTransferred.create({
+    id: createEventID(event),
+    registrationId : label.toString(),
+    blockNumber : event.block.number,
+    transactionID : event.transactionHash,
+    newOwnerId : account.id,
+  });
+
   await transferEvent.save();
 }

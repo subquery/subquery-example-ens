@@ -21,19 +21,18 @@ import {
   NewTTL,
 } from "../types";
 import { BigNumber } from "ethers";
+import assert from "assert";
 
 const BIG_INT_ZERO = BigNumber.from(0).toBigInt();
 
 function createDomain(node: string, timestamp: bigint): Domain {
-  let domain = new Domain(node);
-  if (node == ROOT_NODE) {
-    domain = new Domain(node);
-    domain.ownerId = EMPTY_ADDRESS;
-    domain.isMigrated = true;
-    domain.createdAt = timestamp;
-    domain.subdomainCount = 0;
-  }
-  return domain;
+    return Domain.create({
+      id: node,
+      ownerId: EMPTY_ADDRESS,
+      isMigrated: true,
+      createdAt: timestamp,
+      subdomainCount: 0
+    });
 }
 
 async function getDomain(
@@ -54,6 +53,7 @@ async function getDomain(
 }
 
 function makeSubnode(event: EthereumLog<NewOwnerEvent["args"]>): string {
+  assert(event.args, 'missing event.args')
   return keccak256(concat(event.args.node, event.args.label));
 }
 
@@ -89,6 +89,7 @@ async function _handleNewOwner(
   isMigrated: boolean,
   subnode?: string
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
   let account = new Account(event.args.owner);
   // await account.save()
   if (!subnode) {
@@ -105,18 +106,22 @@ async function _handleNewOwner(
   // logger.info(`_handleNewOwner-2 ${end2-start2} ms`)
 
   if (domain === undefined) {
-    domain = new Domain(subnode);
-    domain.createdAt = event.block.timestamp;
-    domain.subdomainCount = 0;
+    domain = Domain.create({
+      id: subnode,
+      createdAt: event.block.timestamp,
+      subdomainCount: 0,
+      ownerId: '', // Filler
+      isMigrated: false // Filler
+    });
   }
   if (
     (domain.parentId === null && parent !== undefined) ||
     (domain.parentId === undefined && parent !== undefined)
   ) {
     parent.subdomainCount = parent.subdomainCount + 1;
-    const start3 = Date.now();
+    // const start3 = Date.now();
     await parent.save();
-    const end3 = Date.now();
+    // const end3 = Date.now();
     // logger.info(`_handleNewOwner-3 ${end3-start3} ms`)
   }
   if (domain.name == null || domain.name == undefined) {
@@ -149,18 +154,21 @@ async function _handleNewOwner(
   domain.isMigrated = isMigrated;
   // await saveDomain(domain)
 
-  let domainEvent = new NewOwner(createEventID(event));
-  domainEvent.blockNumber = event.block.number;
-  domainEvent.transactionID = event.transactionHash;
-  domainEvent.parentDomainId = event.args.node;
-  domainEvent.domainId = subnode;
-  domainEvent.ownerId = event.args.owner;
+  let domainEvent = NewOwner.create({
+    id: createEventID(event),
+    blockNumber : event.block.number,
+    transactionID : event.transactionHash,
+    parentDomainId : event.args.node,
+    domainId : subnode,
+    ownerId : event.args.owner, 
+  });
+
   // await domainEvent.save()
 
-  const start4 = Date.now();
+  // const start4 = Date.now();
 
   await Promise.all([account.save(), saveDomain(domain), domainEvent.save()]);
-  const end4 = Date.now();
+  // const end4 = Date.now();
   // logger.info(`_handleNewOwner-4 ${end4-start4} ms`)
 }
 
@@ -168,6 +176,8 @@ async function _handleNewOwner(
 export async function handleTransfer(
   event: EthereumLog<TransferEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
+
   let node = event.args.node;
 
   let account = new Account(event.args.owner);
@@ -176,14 +186,19 @@ export async function handleTransfer(
   // Update the domain owner
   let domain = await getDomain(node);
 
-  domain.ownerId = event.args.owner;
-  await saveDomain(domain);
+  if (domain) {
+    domain.ownerId = event.args.owner;
+    await saveDomain(domain);
+  }
 
-  let domainEvent = new Transfer(createEventID(event));
-  domainEvent.blockNumber = event.blockNumber;
-  domainEvent.transactionID = event.transactionHash;
-  domainEvent.domainId = node;
-  domainEvent.ownerId = event.args.owner;
+  let domainEvent = Transfer.create({
+    id: createEventID(event),
+    blockNumber : event.blockNumber,
+    transactionID : event.transactionHash,
+    domainId : node,
+    ownerId : event.args.owner,
+  });
+
   await domainEvent.save();
 }
 
@@ -191,28 +206,37 @@ export async function handleTransfer(
 export async function handleNewResolver(
   event: EthereumLog<NewResolverEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
   let id = event.args.resolver.concat("-").concat(event.args.node);
 
   let node = event.args.node;
   let domain = await getDomain(node);
+
+  assert(domain, 'missing domain')
+
   domain.resolverId = id;
 
   let resolver = await Resolver.get(id);
   if (resolver == null || resolver == undefined) {
-    resolver = new Resolver(id);
-    resolver.domainId = node;
-    resolver.address = event.args.resolver;
+    resolver = Resolver.create({
+      id,
+      domainId: node,
+      address: event.args.resolver
+    });
     await resolver.save();
   } else {
     domain.resolvedAddressId = resolver.addrId;
   }
   await saveDomain(domain);
 
-  let domainEvent = new NewResolver(createEventID(event));
-  domainEvent.blockNumber = event.block.number;
-  domainEvent.transactionID = event.transactionHash;
-  domainEvent.domainId = node;
-  domainEvent.resolverId = id;
+  let domainEvent = NewResolver.create({
+    id: createEventID(event),
+    blockNumber : event.block.number,
+    transactionID : event.transactionHash,
+    domainId : node,
+    resolverId : id, 
+  });
+
   await domainEvent.save();
 }
 
@@ -220,20 +244,25 @@ export async function handleNewResolver(
 export async function handleNewTTL(
   event: EthereumLog<NewTTLEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
+
   let node = event.args.node;
   let domain = await getDomain(node);
   // For the edge case that a domain's owner and resolver are set to empty
   // in the same transaction as setting TTL
-  if (domain !== null || domain !== undefined) {
+  if (domain) {
     domain.ttl = event.args.ttl.toBigInt();
     await domain.save();
   }
 
-  let domainEvent = new NewTTL(createEventID(event));
-  domainEvent.blockNumber = event.block.number;
-  domainEvent.transactionID = event.transactionHash;
-  domainEvent.domainId = node;
-  domainEvent.ttl = event.args.ttl.toBigInt();
+  let domainEvent = NewTTL.create({
+    id: createEventID(event),
+    blockNumber : event.block.number,
+    transactionID : event.transactionHash,
+    domainId : node,
+    ttl : event.args.ttl.toBigInt(),
+
+  });
   await domainEvent.save();
 }
 
@@ -260,6 +289,8 @@ export async function handleNewOwnerOldRegistry(
 export async function handleNewResolverOldRegistry(
   event: EthereumLog<NewResolverEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
+
   let node = event.args.node;
   let domain = await getDomain(node, event.block.timestamp);
   if (node == ROOT_NODE || (domain !== undefined && !domain.isMigrated)) {
@@ -269,6 +300,8 @@ export async function handleNewResolverOldRegistry(
 export async function handleNewTTLOldRegistry(
   event: EthereumLog<NewTTLEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
+
   let domain = await getDomain(event.args.node);
   if (domain?.isMigrated == false) {
     await handleNewTTL(event);
@@ -278,6 +311,8 @@ export async function handleNewTTLOldRegistry(
 export async function handleTransferOldRegistry(
   event: EthereumLog<TransferEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
+
   let domain = await getDomain(event.args.node);
   if (domain?.isMigrated == false) {
     await handleTransfer(event);

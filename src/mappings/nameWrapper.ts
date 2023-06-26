@@ -23,6 +23,7 @@ import {
 } from "./utils";
 import { EthereumLog } from "@subql/types-ethereum";
 import { BigNumber } from "ethers";
+import assert from "assert";
 
 function decodeName(buf: Buffer): Array<string> {
   let offset = 0;
@@ -54,6 +55,8 @@ function decodeName(buf: Buffer): Array<string> {
 export async function handleNameWrapped(
   event: EthereumLog<NameWrappedEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
+
   let decoded = decodeName(Buffer.from(event.args.name));
   let label = decoded[0];
   let name = decoded[1];
@@ -70,37 +73,48 @@ export async function handleNameWrapped(
   }
   await domain.save();
 
-  let wrappedDomain = new WrappedDomain(node);
-  wrappedDomain.domainId = domain.id;
-  wrappedDomain.expiryDate = event.args.expiry.toBigInt();
-  wrappedDomain.fuses = fuses;
-  wrappedDomain.ownerId = owner.id;
-  wrappedDomain.labelName = name;
+  let wrappedDomain =  WrappedDomain.create({
+    id: node,
+    domainId : domain.id,
+    expiryDate : event.args.expiry.toBigInt(),
+    fuses : fuses,
+    ownerId : owner.id,
+    labelName : name,
+  });
+
   await wrappedDomain.save();
 
-  let nameWrappedEvent = new NameWrapped(createEventID(event));
-  nameWrappedEvent.domainId = domain.id;
-  nameWrappedEvent.name = name;
-  nameWrappedEvent.fuses = fuses;
-  nameWrappedEvent.ownerId = owner.id;
-  nameWrappedEvent.blockNumber = blockNumber;
-  nameWrappedEvent.transactionID = transactionID;
+  let nameWrappedEvent =  NameWrapped.create({
+    id: createEventID(event),
+    domainId : domain.id,
+    name : name,
+    fuses : fuses,
+    ownerId : owner.id,
+    blockNumber : blockNumber,
+    transactionID : transactionID,
+    expiry: event.args.expiry.toBigInt(), // Need to double check this
+  });
+
   await nameWrappedEvent.save();
 }
 
 export async function handleNameUnwrapped(
   event: EthereumLog<NameUnwrappedEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
+
   let node = event.args.node;
   let blockNumber = event.block.number;
   let transactionID = event.transactionHash;
   let owner = await createOrLoadAccount(event.args.owner);
 
-  let nameUnwrappedEvent = new NameUnwrapped(createEventID(event));
-  nameUnwrappedEvent.domainId = node;
-  nameUnwrappedEvent.ownerId = owner.id;
-  nameUnwrappedEvent.blockNumber = blockNumber;
-  nameUnwrappedEvent.transactionID = transactionID;
+  let nameUnwrappedEvent =  NameUnwrapped.create({
+    id: createEventID(event),
+    domainId : node,
+    ownerId : owner.id,
+    blockNumber : blockNumber,
+    transactionID : transactionID,
+  });
   await nameUnwrappedEvent.save();
   await WrappedDomain.remove(node);
 }
@@ -108,20 +122,29 @@ export async function handleNameUnwrapped(
 export async function handleFusesSet(
   event: EthereumLog<FusesSetEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
+
   let node = event.args.node;
   let fuses = event.args.fuses;
   let expiry = event.args.expiry;
   let blockNumber = event.block.number;
   let transactionID = event.transactionHash;
   let wrappedDomain = await WrappedDomain.get(node);
-  wrappedDomain.fuses = fuses;
-  wrappedDomain.expiryDate = expiry.toBigInt();
-  await wrappedDomain.save();
-  let fusesBurnedEvent = new FusesSet(createEventID(event));
-  fusesBurnedEvent.domainId = node;
-  fusesBurnedEvent.fuses = fuses;
-  fusesBurnedEvent.blockNumber = blockNumber;
-  fusesBurnedEvent.transactionID = transactionID;
+
+  if (wrappedDomain) {
+    wrappedDomain.fuses = fuses;
+    wrappedDomain.expiryDate = expiry.toBigInt();
+    await wrappedDomain.save();
+  }
+
+  let fusesBurnedEvent =  FusesSet.create({
+    id: createEventID(event),
+    domainId : node,
+    fuses : fuses,
+    blockNumber : blockNumber,
+    transactionID : transactionID,
+    expiry: event.args.expiry.toBigInt()
+  });
   await fusesBurnedEvent.save();
 }
 
@@ -139,21 +162,31 @@ async function makeWrappedTransfer(
   // new registrations emit the Transfer` event before the NameWrapped event
   // so we need to create the WrappedDomain entity here
   if (wrappedDomain == null || wrappedDomain == undefined) {
-    wrappedDomain = new WrappedDomain(namehash);
+    wrappedDomain = WrappedDomain.create({
+      domainId: domain.id,
+      expiryDate: BigInt(0),
+      fuses: 0,
+      id: namehash,
+      ownerId: _to.id
+    });
   }
-  wrappedDomain.ownerId = _to.id;
   await wrappedDomain.save();
-  const wrappedTransfer = new WrappedTransfer(eventID);
-  wrappedTransfer.domainId = domain.id;
-  wrappedTransfer.blockNumber = blockNumber;
-  wrappedTransfer.transactionID = transactionID;
-  wrappedTransfer.ownerId = _to.id;
+  const wrappedTransfer =  WrappedTransfer.create({
+    id: eventID,
+    domainId : domain.id,
+    blockNumber : blockNumber,
+    transactionID : transactionID,
+    ownerId : _to.id,
+  });
+
   await wrappedTransfer.save();
 }
 
 export async function handleTransferSingle(
   event: EthereumLog<TransferSingleEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
+
   await makeWrappedTransfer(
     event.block.number,
     event.transactionHash,
@@ -166,6 +199,8 @@ export async function handleTransferSingle(
 export async function handleTransferBatch(
   event: EthereumLog<TransferBatchEvent["args"]>
 ): Promise<void> {
+  assert(event.args, 'missing event.args')
+
   let blockNumber = event.block.number;
   let transactionID = event.transactionHash;
   let ids = event.args.ids;
