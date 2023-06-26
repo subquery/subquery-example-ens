@@ -53,7 +53,13 @@ export async function createOrLoadAccount(address: string): Promise<Account> {
 export async function createOrLoadDomain(node: string): Promise<Domain> {
   let domain = await Domain.get(node);
   if (domain == null || domain == undefined) {
-    domain = new Domain(node);
+    domain = Domain.create({
+      id: node,
+      subdomainCount: 0,
+      ownerId: '',
+      isMigrated: false,
+      createdAt: BigInt(0)
+    });
     await domain.save();
   }
   return domain;

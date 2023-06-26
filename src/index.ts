@@ -1,7 +1,10 @@
 //Exports all handler functions
 
 import { atob } from "abab";
-global.atob = atob;
+
+if (!global.atob) {
+    global.atob = atob as any;
+}
 
 export * from "./mappings/ensRegistry";
 export * from "./mappings/ethRegistrar";

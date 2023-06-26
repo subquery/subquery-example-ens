@@ -24,6 +24,7 @@
     "@subql/common": "latest",
     "@subql/types-ethereum": "latest",
     "@subql/validator": "latest",
+    "abab": "^2.0.6",
     "assert": "^2.0.0"
   },
   "devDependencies": {
